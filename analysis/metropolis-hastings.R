@@ -1,6 +1,8 @@
 # libraries
 library(tidyverse)
 library(patchwork)
+library(invgamma)
+
 set.seed(1600)
 
 # set par names
@@ -95,29 +97,29 @@ theta0 <- c(1, 2, 1)
 prop_sd <- c(0.5, 0.1, 0.25)
 its <- 100000
 burn <- 25000
-chain <- metropHastingsMCMC(theta0, prop_sd, its, burn)
+sims <- metropHastingsMCMC(theta0, prop_sd, its, burn)
 
 
 # plot --------------------------------------------------------------------
 
-burnt_chain_df <- chain |>
+df_sims <- sims |>
   as_tibble() |>
   set_names(pars) |>
   mutate(iter = 1:n()) |>
   pivot_longer(c(b0, b1, sd))
 
-df_mean <- burnt_chain_df |>
+df_mean <- df_sims |>
   group_by(name) |>
   summarise(value = mean(value))
 
-g_hist <- burnt_chain_df |>
+g_hist <- df_sims |>
   ggplot(aes(value)) +
   geom_histogram(fill = "darkcyan", bins = 60) +
   geom_vline(aes(xintercept = pars_true), pars_true, col = "red", lty = 2) +
   geom_vline(aes(xintercept = value), df_mean, lty = 2) +
   facet_wrap(~name, nrow = length(pars), scales = "free_x")
 
-g_chains <- burnt_chain_df |>
+g_chains <- df_sims |>
   ggplot(aes(iter, value)) +
   geom_line() +
   geom_hline(aes(yintercept = pars_true), pars_true, col = "red", lty = 2) +
